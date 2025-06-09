@@ -15,8 +15,7 @@ class Regression:
     def predict(self, x):
         m = self.parameters["m"]
         c = self.parameters["c"]
-        pred = np.dot(x, m) + c
-        return pred
+        return np.dot(x, m) + c
 
     def _cost(self, pred, y):
         return np.mean((y - pred) ** 2)
@@ -45,13 +44,8 @@ class Regression:
         if not isinstance((x, y), (np.ndarray, np.ndarray)):
             x = x.to_numpy()
             y = y.to_numpy()
-        print(x.shape[1])
-        print(x.shape[0])
-        print(x.shape)
         self.parameters["m"] = np.random.rand(x.shape[1], 1) * -1
         self.parameters["c"] = np.random.uniform(0, 1) * -1
-        print(self.parameters["m"])
-        print(self.parameters["c"])
 
         for i in range(epochs):
             self._epoch(x, y, lr, verbose, n=i)
