@@ -1,6 +1,9 @@
 import numpy as np
 import pandas as pd
 
+import Cost
+import Regularization
+
 
 data = pd.read_csv("data/Admission_Predict.csv")
 data.drop("Serial No.", axis="columns", inplace=True)
@@ -17,8 +20,8 @@ class Regression:
         c = self.parameters["c"]
         return np.dot(x, m) + c
 
-    def _cost(self, pred, y):
-        return np.mean((y - pred) ** 2)
+    def _cost(self, pred, y, cost_f):
+        return cost_f.calculate(y, pred)
 
     def _grad(self, pred, y, x):
         derivatives = {}
@@ -33,14 +36,32 @@ class Regression:
         self.parameters["m"] = self.parameters["m"] - lr * grad["dm"]
         self.parameters["c"] = self.parameters["c"] - lr * grad["dc"]
 
-    def _epoch(self, x, y, lr, verbose: bool, n: int):
+    def _epoch(
+        self,
+        x,
+        y,
+        lr,
+        verbose: bool,
+        n: int,
+        cost_f: Cost,
+        regularization: Regularization,
+    ):
         pred = self.predict(x)
-        cost = self._cost(pred, y)
+        cost = self._cost(pred, y, cost_f)
         self._back_prop(pred, y, x, lr)
         if verbose:
             print("Epoch: {}, loss: {}".format(n, cost))
 
-    def train(self, x, y, lr=0.000003, epochs=10000, verbose: bool = True):
+    def train(
+        self,
+        x,
+        y,
+        cost: Cost,
+        regularization: Regularization = None,
+        lr=0.000005,
+        epochs=1500,
+        verbose: bool = True,
+    ):
         if not isinstance((x, y), (np.ndarray, np.ndarray)):
             x = x.to_numpy()
             y = y.to_numpy()
@@ -48,12 +69,14 @@ class Regression:
         self.parameters["c"] = np.random.uniform(0, 1) * -1
 
         for i in range(epochs):
-            self._epoch(x, y, lr, verbose, n=i)
+            self._epoch(
+                x, y, lr, verbose, n=i, cost_f=cost, regularization=regularization
+            )
 
 
 x = data.drop(["Chance of Admit "], axis=1)
 
 y = data[["Chance of Admit "]]
 
-reg = Regression("linear")
-reg.train(x, y)
+reg = Regression(type="linear")
+reg.train(x, y, cost=Cost.MSE())
